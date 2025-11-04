@@ -1,0 +1,61 @@
+services:
+  # Demo web
+  - type: web
+    name: sentiment-demo
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app/app_streamlit_db.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: APP_MODE
+        value: demo
+    disk:
+      name: data-disk
+      mountPath: ./data
+      sizeGB: 1
+
+  # Pro web (با قفل پسورد)
+  - type: web
+    name: sentiment-pro
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run app/app_streamlit_db.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: APP_MODE
+        value: pro
+      - key: PRO_KEY
+        sync: false   # مقدار را بعداً در داشبورد Render وارد می‌کنی
+    disk:
+      name: data-disk
+      mountPath: ./data
+      sizeGB: 1
+
+  # Cron: اجرای ETL هر 60 دقیقه
+  - type: cron
+    name: sentiment-etl
+    env: python
+    plan: free
+    schedule: "*/60 * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python etl_to_sqlite.py
+    disk:
+      name: data-disk
+      mountPath: ./data
+      sizeGB: 1
+
+  # Cron: پست لینکدین روزانه (از طریق Zapier Webhook)
+  - type: cron
+    name: linkedin-post
+    env: python
+    plan: free
+    schedule: "0 10 * * *"   # هر روز 10:00 UTC (می‌توانی عوض کنی)
+    buildCommand: pip install -r requirements.txt
+    startCommand: python post_summary.py
+    envVars:
+      - key: ZAPIER_HOOK_URL
+        sync: false
+    disk:
+      name: data-disk
+      mountPath: ./data
+      sizeGB: 1
