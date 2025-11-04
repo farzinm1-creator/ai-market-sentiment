@@ -1,0 +1,5 @@
+backend: finbert
+finbert_model: ProsusAI/finbert
+ensemble_weight: 0.7
+min_confidence_score: 0.55
+min_abs_final_for_daily: 0.12
